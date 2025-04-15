@@ -3,8 +3,8 @@ package controller
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -14,7 +14,7 @@ import (
 	"github.com/lijie-keith/go_init_project/commonUtils"
 	"github.com/lijie-keith/go_init_project/config"
 	"github.com/lijie-keith/go_init_project/controller/model"
-	"github.com/lijie-keith/go_init_project/token"
+	"github.com/lijie-keith/go_init_project/store"
 	"golang.org/x/crypto/sha3"
 	"math/big"
 	"net/http"
@@ -37,13 +37,14 @@ func QueryAccountBalance(c *gin.Context) {
 // QueryTokenBalance todo 未调通
 func QueryTokenBalance(c *gin.Context) {
 	addressStr := c.Query("address")
-	tokenAddress := common.HexToAddress(addressStr)
-	instance, err := token.NewToken(tokenAddress, commonUtils.Client)
+	tokenAddressStr := c.Query("tokenAddress")
+	tokenAddress := common.HexToAddress(tokenAddressStr)
+	instance, err := store.NewToken(tokenAddress, commonUtils.Client)
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
 	}
 
-	address := common.HexToAddress("0x779877A7B0D9E8603169DdbD7836e478b4624789")
+	address := common.HexToAddress(addressStr)
 	of, err := instance.BalanceOf(&bind.CallOpts{}, address)
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
@@ -130,18 +131,11 @@ func TransferBalance(c *gin.Context) {
 		config.SystemLogger.Error(err.Error())
 	}
 
-	toECDSA, err := crypto.HexToECDSA(transferRequest.PrivateKey)
+	// 2.根据秘钥生成公钥地址和钱包地址
+	privateKey, fromAddress, err := commonUtils.Encrypt(transferRequest.PrivateKey)
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
 	}
-
-	publicKey := toECDSA.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		config.SystemLogger.Error("error casting public key")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
 	nonce, err := commonUtils.Client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
@@ -170,7 +164,7 @@ func TransferBalance(c *gin.Context) {
 		Data:     data,
 	})
 
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), toECDSA)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
 	}
@@ -192,18 +186,10 @@ func TransferTokenBalance(c *gin.Context) {
 	}
 
 	// 2.根据秘钥生成公钥地址和钱包地址
-	privateKey, err := crypto.HexToECDSA(transferRequest.PrivateKey)
+	privateKey, fromAddress, err := commonUtils.Encrypt(transferRequest.PrivateKey)
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
 	}
-
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		config.SystemLogger.Error("error casting public key")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
 	// 3.生成交易所需要的参数
 	nonce, err := commonUtils.Client.PendingNonceAt(context.Background(), fromAddress)
@@ -235,10 +221,12 @@ func TransferTokenBalance(c *gin.Context) {
 	data = append(data, paddedAddress...)
 	data = append(data, paddedAmount...)
 
-	gasLimit, err := commonUtils.Client.EstimateGas(context.Background(), ethereum.CallMsg{
-		To:   &toAddress,
-		Data: data,
-	})
+	gasLimit := uint64(50000)
+	//本地模拟测试后写死
+	//gasLimit, err := commonUtils.Client.EstimateGas(context.Background(), ethereum.CallMsg{
+	//	To:   &toAddress,
+	//	Data: data,
+	//})
 	if err != nil {
 		config.SystemLogger.Error(err.Error())
 	}
@@ -270,6 +258,14 @@ func TransferTokenBalance(c *gin.Context) {
 		config.SystemLogger.Error(err.Error())
 	}
 
-	c.JSON(http.StatusOK, commonUtils.OK.WithData(signedTx.Hash()))
+	rawTxBytes, err := signedTx.MarshalBinary()
+	if err != nil {
+		config.SystemLogger.Error(err.Error())
+	}
+	rawTxHex := hex.EncodeToString(rawTxBytes)
 
+	c.JSON(http.StatusOK, commonUtils.OK.WithData(map[string]interface{}{
+		"rawTx": rawTxHex,
+		"tx":    signedTx.Hash().Hex(),
+	}))
 }

@@ -6,7 +6,10 @@ var SystemLogger = logrus.New()
 
 const (
 	CLIENT_URL = "https://eth-sepolia.g.alchemy.com/v2/I9QhmTfGdANknDxUldHOKnlrEtJrhCUs"
-	APP_PORT   = ":8080"
+
+	WSS_CLIENT_URL = "wss://eth-sepolia.g.alchemy.com/v2/I9QhmTfGdANknDxUldHOKnlrEtJrhCUs"
+
+	APP_PORT = ":8080"
 
 	LOG_FILE_PATH        = "./logs/"
 	LOG_FILE_NAME        = "system.log"

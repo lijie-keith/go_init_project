@@ -29,6 +29,15 @@ func InitRouter(router *gin.Engine) {
 		blockChainRouter.POST("/transferTokenBalance", controller.TransferTokenBalance)
 	}
 
+	solidityRouter := router.Group("/solidity")
+	{
+		solidityRouter.POST("/deploySolidity", controller.DeploySolidity)
+		solidityRouter.POST("/newStore", controller.NewStore)
+		solidityRouter.POST("/setItem", controller.SetItem)
+		solidityRouter.POST("/getSolidityByteCode", controller.GetSolidityByteCode)
+		solidityRouter.POST("/getSolidityEventLogs", controller.GetSolidityEventLogs)
+	}
+
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("UserNameUnique", admin.UserNameUniqueValidator)
 		if err != nil {
