@@ -1,4 +1,4 @@
-package common
+package commonUtils
 
 type Response struct {
 	Code int         `json:"code"` // 错误码

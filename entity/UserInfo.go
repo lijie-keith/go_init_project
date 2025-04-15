@@ -2,7 +2,7 @@ package entity
 
 import (
 	"fmt"
-	"github.com/lijie-keith/go_init_project/common"
+	"github.com/lijie-keith/go_init_project/commonUtils"
 )
 
 type UserInfo struct {
@@ -19,7 +19,7 @@ type UserInfoPage struct {
 }
 
 func init() {
-	err := common.DB.AutoMigrate(&UserInfo{})
+	err := commonUtils.DB.AutoMigrate(&UserInfo{})
 	if err != nil {
 		fmt.Println("------------------- admin migrate err -------------------")
 		panic(err)
@@ -31,20 +31,20 @@ func (*UserInfo) TableName() string {
 }
 
 func (userInfo *UserInfo) CreateUserInfo() int {
-	common.DB.Create(userInfo)
+	commonUtils.DB.Create(userInfo)
 	return userInfo.Id
 }
 
 func (userInfo *UserInfo) GetUserInfoById(id int) {
-	common.DB.Where("is_deleted = 0").First(&userInfo, id)
+	commonUtils.DB.Where("is_deleted = 0").First(&userInfo, id)
 }
 
 func (userInfo *UserInfo) GetUserInfoByName(userName string) {
-	common.DB.Model(&UserInfo{}).Limit(1).Where("is_deleted = 0").Where(UserInfo{UserName: userName}).First(userInfo)
+	commonUtils.DB.Model(&UserInfo{}).Limit(1).Where("is_deleted = 0").Where(UserInfo{UserName: userName}).First(userInfo)
 }
 
 func (userInfo *UserInfo) UpdateUserInfoById() {
-	common.DB.Save(&userInfo)
+	commonUtils.DB.Save(&userInfo)
 }
 
 func (userInfo *UserInfo) PageUserInfo(userInfoPage *UserInfoPage) []UserInfo {
@@ -58,6 +58,6 @@ func (userInfo *UserInfo) PageUserInfo(userInfoPage *UserInfoPage) []UserInfo {
 	offset := (current - 1) * size
 
 	// 执行分页查询
-	common.DB.Limit(size).Offset(offset).Where("is_deleted = 0").Find(&users)
+	commonUtils.DB.Limit(size).Offset(offset).Where("is_deleted = 0").Find(&users)
 	return users
 }

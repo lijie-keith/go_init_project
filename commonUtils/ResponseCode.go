@@ -1,4 +1,4 @@
-package common
+package commonUtils
 
 var (
 	OK  = response(200, "ok")    // 通用成功

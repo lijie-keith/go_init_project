@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lijie-keith/go_init_project/common"
+	"github.com/lijie-keith/go_init_project/commonUtils"
 	"github.com/lijie-keith/go_init_project/config"
 	"github.com/lijie-keith/go_init_project/middleware"
 	"github.com/lijie-keith/go_init_project/router"
@@ -15,7 +15,7 @@ var db = make(map[string]string)
 
 func setupRouter() *gin.Engine {
 	engine := gin.New()
-	engine.Use(middleware.LoggerToFile(), gin.Recovery()) // 日志文件
+	engine.Use(middleware.LoggerToFile(), Recover) // 日志文件
 
 	router.InitRouter(engine)
 
@@ -37,7 +37,7 @@ func Recover(c *gin.Context) {
 			debug.PrintStack()
 
 			// 返回统一的Json风格
-			c.JSON(http.StatusOK, common.Err)
+			c.JSON(http.StatusOK, commonUtils.Err)
 			//终止后续操作
 			c.Abort()
 		}

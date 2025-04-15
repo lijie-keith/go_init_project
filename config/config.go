@@ -1,7 +1,12 @@
 package config
 
+import "github.com/sirupsen/logrus"
+
+var SystemLogger = logrus.New()
+
 const (
-	APP_PORT = ":8080"
+	CLIENT_URL = "https://eth-sepolia.g.alchemy.com/v2/I9QhmTfGdANknDxUldHOKnlrEtJrhCUs"
+	APP_PORT   = ":8080"
 
 	LOG_FILE_PATH        = "./logs/"
 	LOG_FILE_NAME        = "system.log"

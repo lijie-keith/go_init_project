@@ -1,7 +1,8 @@
-package common
+package commonUtils
 
 import (
 	"fmt"
+	"github.com/lijie-keith/go_init_project/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -57,11 +58,11 @@ func init() {
 	})
 	// 判断连接情况
 	if err != nil {
-		fmt.Println("----------数据库连接失败--------------")
+		config.SystemLogger.Info("----------数据库连接失败--------------")
 		//panic 抛出异常，并终止程序
 		panic(err)
 	}
-	fmt.Println("----------数据库连接成功--------------")
+	config.SystemLogger.Info("----------数据库连接成功--------------")
 	// 分别赋值给你全局变量DB 和DBD
 	DB = db
 }

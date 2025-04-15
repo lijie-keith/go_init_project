@@ -36,9 +36,8 @@ func LoggerToFile() gin.HandlerFunc {
 
 	fileAndStdoutWriter := io.MultiWriter(writers...)
 
-	logger := logrus.New()
-	logger.SetOutput(fileAndStdoutWriter)
-	logger.SetLevel(getLevel())
+	config.SystemLogger.SetOutput(fileAndStdoutWriter)
+	config.SystemLogger.SetLevel(getLevel())
 
 	logWriter, err := rotatelogs.New(
 		fileName+".%Y-%m-%d.log",
@@ -60,7 +59,8 @@ func LoggerToFile() gin.HandlerFunc {
 		TimestampFormat: "2006-01-02 15:04:05",
 	})
 
-	logger.AddHook(ifHook)
+	config.SystemLogger.AddHook(ifHook)
+	config.SystemLogger.SetReportCaller(true)
 
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -74,7 +74,7 @@ func LoggerToFile() gin.HandlerFunc {
 		status := c.Writer.Status()
 		clientIP := c.ClientIP()
 		// 日志格式
-		logger.WithFields(logrus.Fields{
+		config.SystemLogger.WithFields(logrus.Fields{
 			"status_code":  status,
 			"latency_time": latency,
 			"client_ip":    clientIP,
